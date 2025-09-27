@@ -36,5 +36,5 @@ La aplicación será desarrollada con **Flutter** y cada integrante del equipo t
 - `main` → rama principal del proyecto.  
 - `brayan` → desarrollo de confirmación de tokens.  
 - `jossely` → desarrollo de login y registro.  
-- `juan` → desarrollo de perfil de usuario.  
+- `marco` → desarrollo de perfil de usuario.  
 - `breiner` → desarrollo de lugares, chatbot y pantalla de carga.  
