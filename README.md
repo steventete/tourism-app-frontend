@@ -16,7 +16,7 @@ La aplicación será desarrollada con **Flutter** y cada integrante del equipo t
 ## Tareas Pendientes (Front-End)
 
 ### Brayan Villegas
-- [ ] Web de Confirmación de Tokens: Desarrollar la web de confirmación de tokens
+- [x] Web de Confirmación de Tokens: Desarrollar la web de confirmación de tokens
 
 ### Jossely Aguirre
 - [ ] Login: Implementar funcionalidad de inicio de sesión  
