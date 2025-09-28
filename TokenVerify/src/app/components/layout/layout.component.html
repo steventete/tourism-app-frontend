@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="layout-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <div class="logo-icon">
+              <fa-icon [icon]="faMapMarkerAlt"></fa-icon>
+            </div>
+            <div class="logo-text">
+              <h1>TurisApp Colombia</h1>
+              <p>Cartagena • Coveñas</p>
+            </div>
+          </div>
+          <div class="verification-badge">
+            <fa-icon [icon]="faShieldAlt"></fa-icon>
+            <span>Verificación Segura</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2025 TurisApp Colombia. Todos los derechos reservados. | <a href="#" class="footer-link">Brayan Villegas Corrales</a></p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
