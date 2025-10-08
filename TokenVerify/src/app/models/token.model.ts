@@ -7,10 +7,27 @@ export interface TokenVerificationResponse {
   };
 }
 
+export interface PasswordResetResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 export interface TokenValidationError {
   type: 'TOKEN_NOT_FOUND' | 'TOKEN_EXPIRED' | 'TOKEN_INVALID' | 'NETWORK_ERROR';
   message: string;
 }
+
+export interface PasswordResetRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface EmailVerificationRequest {
+  token: string;
+}
+
+export type TokenType = 'email-verification' | 'password-reset';
 
 export interface NextStep {
   icon: string;

@@ -1,16 +1,58 @@
-# TokenVerify
+# TurisApp Colombia - Token Verification System
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.2.
+Sistema de verificación de tokens para TurisApp Colombia que maneja tanto la verificación de usuarios como el restablecimiento de contraseñas.
 
-## Development server
+## Características
 
-To start a local development server, run:
+- ✅ **Verificación de Email**: Activación de cuentas de usuario mediante tokens
+- 🔐 **Restablecimiento de Contraseña**: Cambio de contraseña usando tokens seguros
+- 🌐 **API Integration**: Conexión completa con las APIs de TurisApp Colombia
+- 📱 **Responsive Design**: Interfaz optimizada para todos los dispositivos
+- 🎨 **UI/UX Moderna**: Diseño atractivo con animaciones y feedback visual
+
+## APIs Integradas
+
+### URL Base
+```
+https://app-turismo.onrender.com/api/
+```
+
+### Endpoints
+
+#### 1. Verificación de Email
+- **URL**: `POST /auth/verify-email`
+- **Payload**: 
+  ```json
+  {
+    "token": "string"
+  }
+  ```
+
+#### 2. Restablecimiento de Contraseña
+- **URL**: `POST /auth/reset-password`
+- **Payload**: 
+  ```json
+  {
+    "token": "string",
+    "newPassword": "string (6-36 caracteres)"
+  }
+  ```
+
+## Rutas Disponibles
+
+- `/` o `/verify-email` - Verificación de email de usuario
+- `/reset-password` - Restablecimiento de contraseña
+- `/demo` - Página de demostración
+
+## Desarrollo
+
+Para iniciar el servidor de desarrollo:
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+La aplicación estará disponible en `http://localhost:4200/`.
 
 ## Code scaffolding
 

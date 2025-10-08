@@ -58,7 +58,7 @@ export class TokenVerificationComponent implements OnInit {
       return;
     }
 
-    this.tokenService.verifyToken(token).subscribe({
+    this.tokenService.verifyEmailToken(token).subscribe({
       next: (response: TokenVerificationResponse) => {
         this.verificationState = 'success';
         this.loadTourismOptions();

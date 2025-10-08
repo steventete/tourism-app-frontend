@@ -2,7 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { delay, map, catchError } from 'rxjs/operators';
-import { TokenVerificationResponse, TokenValidationError, NextStep, TourismOption } from '../models/token.model';
+import { 
+  TokenVerificationResponse, 
+  PasswordResetResponse, 
+  TokenValidationError, 
+  NextStep, 
+  TourismOption,
+  EmailVerificationRequest,
+  PasswordResetRequest,
+  TokenType 
+} from '../models/token.model';
 
 @Injectable({
   providedIn: 'root'
@@ -26,10 +35,9 @@ export class TokenService {
   }
 
   /**
-   * Verifica el token con el servidor (simulado)
+   * Verifica el token de email con el servidor
    */
-  verifyToken(token: string): Observable<TokenVerificationResponse> {
-    // Simulación de verificación de token
+  verifyEmailToken(token: string): Observable<TokenVerificationResponse> {
     if (!token) {
       return throwError(() => ({
         type: 'TOKEN_NOT_FOUND',
@@ -37,24 +45,110 @@ export class TokenService {
       } as TokenValidationError));
     }
 
-    // Validación básica de formato de token
-    const tokenPattern = /^[A-Za-z0-9+/=]{20,}$/;
-    if (tokenPattern.test(token)) {
-      return of({
-        success: true,
-        message: this.messages.success,
-        data: {
-          userId: 'demo-user-id',
-          email: 'demo@turisapp.com'
-        }
-      });
+    const requestData: EmailVerificationRequest = { token };
+
+    return this.http.post<any>(`${this.apiUrl}/auth/verify-email`, requestData)
+      .pipe(
+        map((response: any) => ({
+          success: true,
+          message: this.messages.success,
+          data: response.data
+        } as TokenVerificationResponse)),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error verifying email token:', error);
+          return throwError(() => this.mapHttpErrorToTokenError(error));
+        })
+      );
+  }
+
+  /**
+   * Restablece la contraseña usando token y nueva contraseña
+   */
+  resetPassword(token: string, newPassword: string): Observable<PasswordResetResponse> {
+    if (!token) {
+      return throwError(() => ({
+        type: 'TOKEN_NOT_FOUND',
+        message: this.messages.tokenNotFound
+      } as TokenValidationError));
     }
 
-    // Token inválido
-    return throwError(() => ({
+    if (!newPassword || newPassword.length < 6 || newPassword.length > 36) {
+      return throwError(() => ({
+        type: 'TOKEN_INVALID',
+        message: 'La nueva contraseña debe tener entre 6 y 36 caracteres'
+      } as TokenValidationError));
+    }
+
+    const requestData: PasswordResetRequest = { token, newPassword };
+
+    return this.http.post<any>(`${this.apiUrl}/auth/reset-password`, requestData)
+      .pipe(
+        map((response: any) => ({
+          success: true,
+          message: 'Contraseña cambiada exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.',
+          data: response.data
+        } as PasswordResetResponse)),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error resetting password:', error);
+          return throwError(() => this.mapHttpErrorToTokenError(error));
+        })
+      );
+  }
+
+  /**
+   * Método heredado para compatibilidad con el componente existente
+   */
+  verifyToken(token: string): Observable<TokenVerificationResponse> {
+    return this.verifyEmailToken(token);
+  }
+
+  /**
+   * Determina el tipo de operación basado en la URL actual
+   */
+  getTokenTypeFromUrl(): TokenType {
+    const path = window.location.pathname;
+    if (path.includes('reset-password')) {
+      return 'password-reset';
+    }
+    return 'email-verification';
+  }
+
+  /**
+   * Mapea errores HTTP a errores de token
+   */
+  private mapHttpErrorToTokenError(error: HttpErrorResponse): TokenValidationError {
+    if (error.status === 0) {
+      return {
+        type: 'NETWORK_ERROR',
+        message: 'Error de conexión. Verifica tu conexión a internet e intenta nuevamente.'
+      };
+    }
+
+    if (error.status === 400) {
+      return {
+        type: 'TOKEN_INVALID',
+        message: error.error?.message || 'El token no es válido'
+      };
+    }
+
+    if (error.status === 404) {
+      return {
+        type: 'TOKEN_NOT_FOUND',
+        message: 'Token no encontrado o ha expirado'
+      };
+    }
+
+    if (error.status >= 500) {
+      return {
+        type: 'NETWORK_ERROR',
+        message: 'Error del servidor. Intenta nuevamente más tarde.'
+      };
+    }
+
+    return {
       type: 'TOKEN_INVALID',
-      message: this.messages.tokenInvalid
-    } as TokenValidationError));
+      message: error.error?.message || 'Error desconocido'
+    };
   }
 
   /**
