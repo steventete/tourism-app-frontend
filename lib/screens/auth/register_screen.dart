@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
+
+const Color primaryColor = Color(0xFF0ba6da);
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -26,23 +30,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _selectedGender;
 
   final List<Map<String, String>> _documentTypes = [
-    {"id": "1", "name": "Cédula de Ciudadanía"},
-    {"id": "2", "name": "Tarjeta de Identidad"},
-    {"id": "3", "name": "Pasaporte"},
-    {"id": "4", "name": "Cédula de Extranjería"},
+    {"id": "54bbc972-c83f-4372-a2b8-36be122ba17b", "name": "Cédula de Ciudadanía"},
+    {"id": "703dc169-4b2e-42ca-b6cd-a09463aa431f", "name": "Tarjeta de Identidad"},
+    {"id": "ad7a7d6a-429d-4f03-8715-1c9d444a703b", "name": "Registro Civil de Nacimiento"},
+    {"id": "904d0241-f27f-452c-be2f-129bb90a11ea", "name": "Cédula de Extranjería"},
+    {"id": "42735a41-aef0-40cd-8c72-94fbadbee70a", "name": "Permiso Especial de Permanencia"},
+    {"id": "4bf3d416-e55b-4c0b-9a48-b4ea298bd09f", "name": "Pasaporte"},
   ];
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2)); 
+    final url = Uri.parse("https://app-turismo.onrender.com/api/auth/register");
+    final body = {
+      "email": _emailController.text.trim(),
+      "password": _passwordController.text.trim(),
+      "username": _usernameController.text.trim(),
+      "displayName": _displayNameController.text.trim(),
+      "documentTypeId": _selectedDocTypeId,
+      "document": _documentController.text.trim(),
+      "firstName": _firstNameController.text.trim(),
+      "lastName": _lastNameController.text.trim(),
+      "phone": _phoneController.text.trim(),
+      "gender": _selectedGender,
+      "birthDate": _birthDateController.text.trim(),
+    };
 
-    setState(() => _isLoading = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Registro exitoso")));
-    Navigator.pop(context);
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+      setState(() => _isLoading = false);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registro exitoso. Revisa tu email para verificar tu cuenta."), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context);
+      } else {
+        final error = jsonDecode(response.body);
+        debugPrint("❌ Error: ${response.body}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${error['message'] ?? 'Error desconocido'}"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error de conexión: $e"), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override
@@ -52,10 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          "Crear cuenta",
-          style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600),
-        ),
+        title: const Text("Crear cuenta", style: TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w600)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -69,12 +109,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 _sectionCard(
                   title: "Cuenta",
-                  icon: FontAwesomeIcons.userPlus,
+                  icon: FontAwesomeIcons.circleUser,
                   children: [
                     _inputField(
                       controller: _emailController,
                       label: "Correo electrónico *",
-                      icon: Icons.email_outlined,
+                      icon: Icons.alternate_email_outlined,
+                      keyboardType: TextInputType.emailAddress,
                       validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
                     ),
                     _inputField(
@@ -82,50 +123,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       label: "Contraseña *",
                       icon: Icons.lock_outline,
                       obscureText: true,
-                      validator: (v) =>
-                          v!.length < 6 ? 'Mínimo 6 caracteres' : null,
+                      validator: (v) => v!.length < 6 ? 'Mínimo 6 caracteres' : null,
                     ),
-                    _inputField(
-                      controller: _usernameController,
-                      label: "Nombre de usuario",
-                      icon: Icons.alternate_email,
-                    ),
-                    _inputField(
-                      controller: _displayNameController,
-                      label: "Nombre visible",
-                      icon: Icons.person_outline,
-                    ),
+                    _inputField(controller: _usernameController, label: "Usuario", icon: Icons.person_outline),
+                    _inputField(controller: _displayNameController, label: "Nombre visible", icon: Icons.badge_outlined),
                   ],
                 ),
                 divider,
                 _sectionCard(
                   title: "Identificación",
-                  icon: FontAwesomeIcons.idCard,
+                  icon: FontAwesomeIcons.idCardClip,
                   children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedDocTypeId,
-                      decoration: const InputDecoration(
-                        labelText: "Tipo de documento *",
-                        prefixIcon: Icon(Icons.badge_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _documentTypes
-                          .map(
-                            (doc) => DropdownMenuItem(
-                              value: doc["id"],
-                              child: Text(doc["name"]!),
-                            ),
-                          )
+                    DropdownMenu<String>(
+                      width: MediaQuery.of(context).size.width - 70,
+                      initialSelection: _selectedDocTypeId,
+                      label: const Text("Tipo de documento *"),
+                      onSelected: (v) => setState(() => _selectedDocTypeId = v),
+                      dropdownMenuEntries: _documentTypes
+                          .map((doc) => DropdownMenuEntry(value: doc["id"]!, label: doc["name"]!))
                           .toList(),
-                      onChanged: (v) => setState(() => _selectedDocTypeId = v),
-                      validator: (v) =>
-                          v == null ? 'Seleccione un tipo de documento' : null,
                     ),
                     const SizedBox(height: 16),
                     _inputField(
                       controller: _documentController,
                       label: "Número de documento *",
-                      icon: Icons.confirmation_number_outlined,
+                      icon: Icons.numbers_outlined,
                       validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
                     ),
                   ],
@@ -154,27 +176,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       keyboardType: TextInputType.phone,
                       validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
                     ),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedGender,
-                      decoration: const InputDecoration(
-                        labelText: "Género *",
-                        prefixIcon: Icon(Icons.wc_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: "Masculino",
-                          child: Text("Masculino"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Femenino",
-                          child: Text("Femenino"),
-                        ),
-                        DropdownMenuItem(value: "Otro", child: Text("Otro")),
+                    DropdownMenu<String>(
+                      width: MediaQuery.of(context).size.width - 70,
+                      initialSelection: _selectedGender,
+                      label: const Text("Género *"),
+                      onSelected: (v) => setState(() => _selectedGender = v),
+                      dropdownMenuEntries: const [
+                        DropdownMenuEntry(value: "male", label: "Masculino"),
+                        DropdownMenuEntry(value: "female", label: "Femenino"),
+                        DropdownMenuEntry(value: "other", label: "Otro"),
                       ],
-                      onChanged: (v) => setState(() => _selectedGender = v),
-                      validator: (v) =>
-                          v == null ? 'Seleccione un género' : null,
                     ),
                     const SizedBox(height: 16),
                     _inputField(
@@ -194,8 +205,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
                         }
                       },
-                      validator: (v) =>
-                          v!.isEmpty ? 'Seleccione una fecha' : null,
+                      validator: (v) => v!.isEmpty ? 'Seleccione una fecha' : null,
                     ),
                   ],
                 ),
@@ -204,29 +214,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _isLoading ? null : _register,
                   icon: _isLoading
                       ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Icon(Icons.check_circle_outline),
+                          height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Icon(Icons.check_circle_outline, color: Colors.white),
                   label: const Text(
                     "Crear cuenta",
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontFamily: 'Inter', fontSize: 16, color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 2,
+                    minimumSize: Size(MediaQuery.of(context).size.width, 50),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -238,11 +237,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _sectionCard({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
+  Widget _sectionCard({required String title, required IconData icon, required List<Widget> children}) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -252,20 +247,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(icon, color: Colors.blueAccent, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+            Row(children: [
+              Icon(icon, color: primaryColor, size: 20),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontFamily: 'Inter', fontSize: 16, fontWeight: FontWeight.w600)),
+            ]),
             const SizedBox(height: 16),
             ...children,
           ],
@@ -295,7 +281,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Colors.blueAccent),
+          prefixIcon: Icon(icon, color: primaryColor),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
       ),

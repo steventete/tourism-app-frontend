@@ -3,7 +3,6 @@ import '../../../widgets/bottom_nav.dart';
 import 'locations.dart';
 import 'recomendations.dart';
 import 'chatbot.dart';
-import 'profile.dart';
 import 'settings.dart';
 
 class MainScreen extends StatefulWidget {
@@ -21,7 +20,6 @@ class _MainScreenState extends State<MainScreen> {
     LocationsPage(),
     RecomendationsPage(),
     ChatBotPage(title: "Asistente Virtual"),
-    ProfilePage(),
     SettingsPage(),
   ];
 

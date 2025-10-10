@@ -89,12 +89,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor: Colors.black,
                             minimumSize: const Size(double.infinity, 48),
                           ),
                           child: const Text(
                             "Iniciar Sesión",
-                            style: TextStyle(color: Color(0xFF0ba6da)),
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -112,7 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           child: const Text(
                             "Registrarse",
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.white, fontSize: 16)
                           ),
                         ),
                       ],

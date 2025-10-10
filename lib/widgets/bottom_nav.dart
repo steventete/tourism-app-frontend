@@ -65,14 +65,6 @@ class BottomNavBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(
               currentIndex == 3
-                  ? Icons.person_rounded
-                  : Icons.person_outline_rounded,
-            ),
-            label: 'Perfil',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              currentIndex == 4
                   ? Icons.settings_rounded
                   : Icons.settings_outlined,
             ),

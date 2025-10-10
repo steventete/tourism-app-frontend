@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tourism_app/main.dart';
+import 'package:tourism_app/services/auth_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,22 +15,74 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await AuthService.login(
+        _identifierController.text.trim(),
+        _passwordController.text.trim(),
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        throw Exception("timeout");
+      });
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      if (!mounted) return;
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MainScreen()),
-      (route) => false,
+      if (response["success"] == true) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+          (route) => false,
+        );
+      } else {
+        final message = response["message"] ??
+            "Credenciales incorrectas. Intenta nuevamente.";
+        _showError(message);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (e.toString().contains("timeout")) {
+        _showError("El servidor no responde. Intenta más tarde.");
+      } else {
+        _showError("Ocurrió un error al iniciar sesión.");
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontFamily: 'Inter')),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _loginWithGoogle() async {
+    // 🔹 Próximamente: integración con Google OAuth
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Inicio con Google en desarrollo"),
+        backgroundColor: Colors.blueAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -46,7 +100,6 @@ class _LoginScreenState extends State<LoginScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                 
                   Container(
                     height: 90,
                     width: 90,
@@ -61,7 +114,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-
                   const Text(
                     "Inicia sesión",
                     style: TextStyle(
@@ -84,7 +136,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                 
                   _buildInputField(
                     controller: _identifierController,
                     label: "Correo o usuario",
@@ -93,7 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                 
                   _buildInputField(
                     controller: _passwordController,
                     label: "Contraseña",
@@ -106,9 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             : Icons.visibility_outlined,
                         color: Colors.grey[600],
                       ),
-                      onPressed: () => setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      }),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     validatorMsg: "Ingresa tu contraseña",
                   ),
@@ -130,7 +179,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -163,18 +211,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                     ),
                   ),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 30),
-
-                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: Container(
-                          height: 1,
-                          color: Colors.grey[300],
-                        ),
+                        child: Container(height: 1, color: Colors.grey[300]),
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 10),
@@ -184,16 +227,38 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       Expanded(
-                        child: Container(
-                          height: 1,
-                          color: Colors.grey[300],
-                        ),
+                        child: Container(height: 1, color: Colors.grey[300]),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(FontAwesomeIcons.google),
+                      label: const Text(
+                        "Continuar con Google",
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 15,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.grey, width: 1.2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        backgroundColor: Colors.white,
+                      ),
+                      onPressed: _loginWithGoogle,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -202,7 +267,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const RegisterScreen()),
+                            builder: (_) => const RegisterScreen(),
+                          ),
                         );
                       },
                       style: OutlinedButton.styleFrom(
@@ -221,9 +287,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 40),
 
-                
                   const Text(
                     "© 2025 TourismApp\nExplora. Descubre. Vive.",
                     style: TextStyle(

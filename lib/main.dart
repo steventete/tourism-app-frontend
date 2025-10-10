@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/onboarding/onboarding.dart';
-import 'screens/features/locations.dart';
-import 'screens/features/recomendations.dart';
-import 'screens/features/chatbot.dart';
-import 'screens/features/profile.dart';
-import 'screens/features/settings.dart';
-import 'widgets/bottom_nav.dart';
+import 'package:tourism_app/screens/onboarding/onboarding.dart';
+import 'package:tourism_app/screens/features/locations.dart';
+import 'package:tourism_app/screens/features/recomendations.dart';
+import 'package:tourism_app/screens/features/chatbot.dart';
+import 'package:tourism_app/screens/features/settings.dart';
+import 'package:tourism_app/widgets/bottom_nav.dart';
+import 'package:tourism_app/utils/storage_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -24,8 +25,58 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0ba6da)),
         fontFamily: GoogleFonts.inter().fontFamily,
       ),
-      home: const OnboardingScreen(),
+      // 👇 Punto inicial que decide si va a login o al main
+      home: const SplashRouter(),
+
+      // 👇 Aquí defines tus rutas nombradas
+      routes: {
+        '/login': (context) => const OnboardingScreen(), // pantalla de login/onboarding
+        '/main': (context) => const MainScreen(),
+        '/settings': (context) => const SettingsPage(),
+        '/chatbot': (context) => const ChatBotPage(title: "Asistente Virtual"),
+        '/locations': (context) => const LocationsPage(),
+        '/recomendations': (context) => const RecomendationsPage(),
+      },
     );
+  }
+}
+
+class SplashRouter extends StatefulWidget {
+  const SplashRouter({super.key});
+
+  @override
+  State<SplashRouter> createState() => _SplashRouterState();
+}
+
+class _SplashRouterState extends State<SplashRouter> {
+  bool _checking = true;
+  bool _loggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLogin();
+  }
+
+  Future<void> _checkLogin() async {
+    final accessToken = await StorageService.getAccessToken();
+    setState(() {
+      _loggedIn = accessToken != null;
+      _checking = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF0ba6da)),
+        ),
+      );
+    }
+
+    return _loggedIn ? const MainScreen() : const OnboardingScreen();
   }
 }
 
@@ -46,11 +97,10 @@ class _MainScreenState extends State<MainScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) => setState(() => _page = index),
-        children: [
+        children: const [
           LocationsPage(),
           RecomendationsPage(),
           ChatBotPage(title: "Asistente Virtual"),
-          ProfilePage(),
           SettingsPage(),
         ],
       ),
