@@ -1,41 +1,40 @@
-# Tourism App (Undefined)
+# Kuagro Explorer
 
-Este es el repositorio Front-End de *Tourism App (Undefined)*, una aplicación de turismo impulsada por Inteligencia Artificial que busca mejorar la experiencia de los viajeros mediante recomendaciones personalizadas y herramientas interactivas.  
+![Flutter](https://img.shields.io/badge/Flutter-3.24%2B-blue?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-2.19%2B-blue?logo=dart)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-lightgrey)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
-La aplicación será desarrollada con **Flutter** y cada integrante del equipo tendrá su propio espacio de trabajo para contribuir al proyecto.  
-
----
-
-## Organización del proyecto
-- Cada integrante trabajará en su propia rama (ejemplo: `brayan`, `jossely`, `juan`, `breiner`).  
-- La rama principal será `main`, donde se integrarán los avances ya probados y aprobados.  
-- Las tareas están organizadas con checkboxes, y cada miembro actualizará su progreso en su rama antes de integrarlo.  
+**Kuagro Explorer** is a cross-platform mobile application built with **Flutter**, designed to enhance local tourism through the exploration of destinations, services, and authentic experiences.  
+The app combines elegant design, robust authentication, and scalability for future integrations such as geolocation and smart recommendations.
 
 ---
 
-## Tareas Pendientes (Front-End)
+## Overview
 
-### Brayan Villegas
-- [x] Web de Confirmación de Tokens: Desarrollar la web de confirmación de tokens
-
-### Jossely Aguirre
-- [ ] Login: Implementar funcionalidad de inicio de sesión  
-- [ ] Register: Implementar funcionalidad de registro de usuarios  
-
-### Juan Rico
-- [ ] Perfil de Usuario: Desarrollar la página de perfil de usuario  
-
-### Breiner Tete
-- [ ] Lugares: Desarrollar la sección de lugares  
-- [ ] Chatbot: Implementar la sección de chatbot  
-- [ ] Pantalla de Carga Personalizada: Crear una pantalla de carga personalizada  
+Kuagro Explorer enables users to discover touristic attractions, cultural sites, and activities with a clean and modern user interface.  
+It is optimized for performance and usability, providing an engaging experience for both local and foreign travelers.
 
 ---
 
-## Ramas de Trabajo
-- `main` → rama principal del proyecto.  
-- `brayan` → desarrollo de confirmación de tokens.  
-- `jossely` → desarrollo de login y registro.  
-- `marco` → desarrollo de perfil de usuario.  
-- `breiner` → desarrollo de lugares, chatbot y pantalla de carga.  
+## Core Features
+
+- Secure user authentication with registration, login, and logout.  
+- Persistent session management with token-based authentication.  
+- Basic recommendation module for discovering nearby experiences.  
+- Modern interface designed with **Inter** font and color scheme `#0ba6da`.  
+- Cross-platform compatibility for Android and iOS.  
+- Modular architecture prepared for future scalability.
+
+---
+
+## Technology Stack
+
+- **Flutter** – Cross-platform UI toolkit.  
+- **Dart** – Application logic and state management.  
+- **Font Awesome Flutter** – Consistent and modern iconography.  
+- **Google Fonts** – Integrated typography for professional design.  
+- **HTTP / Dio** – API communication and data exchange.  
+- **Shared Preferences** – Local persistence for authentication tokens.
 
