@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { delay, map, catchError } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { 
   TokenVerificationResponse, 
   PasswordResetResponse, 
@@ -10,6 +10,7 @@ import {
   TourismOption,
   EmailVerificationRequest,
   PasswordResetRequest,
+  AccountRecoveryResponse,
   TokenType 
 } from '../models/token.model';
 
@@ -54,10 +55,9 @@ export class TokenService {
           message: this.messages.success,
           data: response.data
         } as TokenVerificationResponse)),
-        catchError((error: HttpErrorResponse) => {
-          console.error('Error verifying email token:', error);
-          return throwError(() => this.mapHttpErrorToTokenError(error));
-        })
+        catchError((error: HttpErrorResponse) => 
+          throwError(() => this.mapHttpErrorToTokenError(error))
+        )
       );
   }
 
@@ -88,10 +88,33 @@ export class TokenService {
           message: 'Contraseña cambiada exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.',
           data: response.data
         } as PasswordResetResponse)),
-        catchError((error: HttpErrorResponse) => {
-          console.error('Error resetting password:', error);
-          return throwError(() => this.mapHttpErrorToTokenError(error));
-        })
+        catchError((error: HttpErrorResponse) => 
+          throwError(() => this.mapHttpErrorToTokenError(error))
+        )
+      );
+  }
+
+  /**
+   * Recupera la cuenta de usuario usando email o userId
+   */
+  recoverAccount(identifier: string): Observable<AccountRecoveryResponse> {
+    if (!identifier || identifier.trim().length === 0) {
+      return throwError(() => ({
+        type: 'TOKEN_INVALID',
+        message: 'Debes proporcionar un email o ID de usuario'
+      } as TokenValidationError));
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/users/${encodeURIComponent(identifier)}/recover-account`, {})
+      .pipe(
+        map((response: any) => ({
+          success: true,
+          message: 'Se ha enviado un correo de recuperación a tu cuenta. Revisa tu bandeja de entrada.',
+          data: response.data
+        } as AccountRecoveryResponse)),
+        catchError((error: HttpErrorResponse) => 
+          throwError(() => this.mapHttpErrorToTokenError(error))
+        )
       );
   }
 

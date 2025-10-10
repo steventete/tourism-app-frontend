@@ -6,6 +6,7 @@ Sistema de verificación de tokens para TurisApp Colombia que maneja tanto la ve
 
 - ✅ **Verificación de Email**: Activación de cuentas de usuario mediante tokens
 - 🔐 **Restablecimiento de Contraseña**: Cambio de contraseña usando tokens seguros
+- 🔑 **Recuperación de Cuenta**: Solicitud de recuperación usando email o ID de usuario
 - 🌐 **API Integration**: Conexión completa con las APIs de TurisApp Colombia
 - 📱 **Responsive Design**: Interfaz optimizada para todos los dispositivos
 - 🎨 **UI/UX Moderna**: Diseño atractivo con animaciones y feedback visual
@@ -38,10 +39,25 @@ https://app-turismo.onrender.com/api/
   }
   ```
 
+#### 3. Recuperación de Cuenta
+- **URL**: `POST /users/{identifier}/recover-account`
+- **Parámetros URL**: 
+  - `identifier`: Email del usuario o ID de usuario
+- **Payload**: 
+  ```json
+  {}
+  ```
+- **Ejemplo**: 
+  ```
+  POST /users/test@example.com/recover-account
+  POST /users/user123/recover-account
+  ```
+
 ## Rutas Disponibles
 
 - `/` o `/verify-email` - Verificación de email de usuario
 - `/reset-password` - Restablecimiento de contraseña
+- `/recover-account` - Recuperación de cuenta de usuario
 - `/demo` - Página de demostración
 
 ## Desarrollo

@@ -27,7 +27,21 @@ export interface EmailVerificationRequest {
   token: string;
 }
 
-export type TokenType = 'email-verification' | 'password-reset';
+export interface AccountRecoveryRequest {
+  identifier: string; // puede ser email o userId
+}
+
+export interface AccountRecoveryResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    email?: string;
+    userId?: string;
+    recoveryEmailSent?: boolean;
+  };
+}
+
+export type TokenType = 'email-verification' | 'password-reset' | 'account-recovery';
 
 export interface NextStep {
   icon: string;
