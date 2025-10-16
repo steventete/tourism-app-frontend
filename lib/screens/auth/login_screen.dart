@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tourism_app/main.dart';
 import 'package:tourism_app/services/auth_service.dart';
+import 'package:tourism_app/utils/storage_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -42,6 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (response["success"] == true) {
+          // Guardar el identifier en SharedPreferences
+        await StorageService.saveUserIdentifier("me");
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainScreen()),

@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StorageService {
 
@@ -7,6 +8,7 @@ class StorageService {
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
   static const _expiryKey = 'access_token_expiry';
+  static const String _userIdentifierKey = 'user_identifier';
 
   static Future<void> saveTokens({
     required String accessToken,
@@ -44,5 +46,12 @@ class StorageService {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _expiryKey);
+  }
+  static Future<void> saveUserIdentifier(String identifier) async {
+    await _storage.write(key: _userIdentifierKey, value: identifier);
+  }
+
+  static Future<String?> getUserIdentifier() async {
+    return await _storage.read(key:_userIdentifierKey );
   }
 }
