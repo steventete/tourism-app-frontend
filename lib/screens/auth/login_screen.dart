@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tourism_app/main.dart';
 import 'package:tourism_app/services/auth_service.dart';
+import 'package:tourism_app/utils/storage_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -41,6 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
+      final token = await StorageService.getAccessToken();
+      debugPrint("🔐 Token guardado en SharedPreferences: $token");
+
       if (response["success"] == true) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -76,7 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loginWithGoogle() async {
-    // 🔹 Próximamente: integración con Google OAuth
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Inicio con Google en desarrollo"),
