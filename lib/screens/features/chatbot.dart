@@ -376,33 +376,37 @@ class _ChatBotPageState extends State<ChatBotPage>
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: _processQuestion,
-                      onTap: () => setState(() => _showIntro = false),
-                      style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black87),
-                      decoration: InputDecoration(
-                        hintText: "Habla o escribe tu mensaje...",
-                        hintStyle: TextStyle(
-                            color: isDark ? Colors.white54 : Colors.grey),
-                        filled: true,
-                        fillColor: isDark
-                            ? const Color(0xFF2C2C2C)
-                            : Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
+Expanded(
+  child: ConstrainedBox(
+    constraints: const BoxConstraints(
+      maxHeight: 150, // altura máxima del textfield
+    ),
+    child: TextField(
+      controller: _controller,
+      textInputAction: TextInputAction.newline,
+      onSubmitted: _processQuestion,
+      onTap: () => setState(() => _showIntro = false),
+      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      minLines: 1,
+      maxLines: null, // permite crecer automáticamente
+      decoration: InputDecoration(
+        hintText: "Habla o escribe tu mensaje...",
+        hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey),
+        filled: true,
+        fillColor: isDark ? const Color(0xFF2C2C2C) : Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    ),
+  ),
+),
+
                   const SizedBox(width: 10),
                   _buildMicButton(),
                   const SizedBox(width: 8),

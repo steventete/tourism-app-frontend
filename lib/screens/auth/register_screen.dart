@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:tourism_app/utils/api_routes.dart';
 
 const Color primaryColor = Color(0xFF0ba6da);
 
@@ -42,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final url = Uri.parse("https://face-needs-highlighted-zoo.trycloudflare.com/api/auth/register");
+    final url = Uri.parse(ApiRoutes.register);
     final body = {
       "email": _emailController.text.trim(),
       "password": _passwordController.text.trim(),
