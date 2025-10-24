@@ -45,7 +45,7 @@ class UserService {
       if (accessToken == null) return false;
 
       final response = await http.put(
-        Uri.parse("${ApiRoutes.baseUrl}/users/$identifier"),
+        Uri.parse("${ApiRoutes.baseUrl}/users/picture/$identifier"),
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',
@@ -68,7 +68,6 @@ class UserService {
     }
   }
   
-    /// 🔹 Actualiza la foto de perfil del usuario
   static Future<bool> updateProfilePicture(String identifier, String filePath) async {
     try {
       String? accessToken = await StorageService.getAccessToken();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tourism_app/services/api_service.dart';
 import 'package:tourism_app/services/auth_service.dart';
 import 'package:tourism_app/utils/storage_service.dart';
 import 'register_screen.dart';
@@ -170,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: _showForgotPasswordDialog,
                       child: const Text(
                         "¿Olvidaste tu contraseña?",
                         style: TextStyle(
@@ -181,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 10),
 
                   SizedBox(
@@ -344,6 +346,174 @@ class _LoginScreenState extends State<LoginScreen> {
           borderSide: BorderSide(color: Colors.grey[300]!),
         ),
       ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (_, __, ___) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.lock_reset_rounded,
+                    color: Color(0xFF0ba6da),
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _showForgotPasswordDialog,
+                    child: const Text(
+                      "¿Olvidaste tu contraseña?",
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13.5,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      hintText: "tu@correo.com",
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Colors.grey,
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFFF8F9FA),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF0ba6da),
+                          width: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final email = emailController.text.trim();
+                        if (email.isEmpty) return;
+
+                        try {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Enviando solicitud..."),
+                              duration: Duration(seconds: 2),
+                              backgroundColor: Colors.black54,
+                            ),
+                          );
+
+                          final res = await ApiService.forgotPassword(email);
+
+                          if (res["success"] == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  res["message"] ??
+                                      "Correo de restablecimiento enviado",
+                                  style: const TextStyle(fontFamily: 'Inter'),
+                                ),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          } else {
+                            throw Exception();
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "No se pudo enviar el correo. Intenta más tarde.",
+                                style: TextStyle(fontFamily: 'Inter'),
+                              ),
+                              backgroundColor: Colors.redAccent,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0ba6da),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        "Enviar",
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (_, anim, __, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.15),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOut)),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }

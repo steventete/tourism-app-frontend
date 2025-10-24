@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/bottom_nav.dart';
-import 'locations.dart';
+import 'home.dart';
 import 'recomendations.dart';
 import 'chatbot.dart';
 import 'settings.dart';
@@ -25,9 +25,9 @@ class _MainScreenState extends State<MainScreen> {
     _themeController = ThemeController();
 
     _pages = [
-      const LocationsPage(),
+      const Home(),
       RecomendationsPage(themeController: _themeController),
-      const ChatBotPage(title: "Asistente Virtual"),
+      ChatBotPage(title: "Asistente Virtual", themeController: _themeController),
       SettingsPage(themeController: _themeController),
     ];
   }

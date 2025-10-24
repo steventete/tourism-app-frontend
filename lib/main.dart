@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tourism_app/screens/onboarding/onboarding.dart';
-import 'package:tourism_app/screens/features/locations.dart';
+import 'package:tourism_app/screens/features/home.dart';
 import 'package:tourism_app/screens/features/recomendations.dart';
 import 'package:tourism_app/screens/features/chatbot.dart';
 import 'package:tourism_app/screens/features/settings.dart';
@@ -57,22 +57,17 @@ class _MyAppState extends State<MyApp> {
             ),
           ),
           themeMode: _themeController.themeMode,
-          // home: usamos SplashRouter para decidir
           home: SplashRouter(themeController: _themeController),
 
-          // Rutas nombradas (asegúrate de importar las pantallas)
           routes: {
             '/login': (context) => const OnboardingScreen(),
-            // MainScreen necesita el themeController — la route lo provee.
             '/main': (context) => MainScreen(themeController: _themeController),
-            // SettingsPage requiere themeController
             '/settings': (context) =>
                 SettingsPage(themeController: _themeController),
             '/chatbot': (context) =>
-                const ChatBotPage(title: "Asistente Virtual"),
-            '/locations': (context) => const LocationsPage(),
+                ChatBotPage(title: "Asistente Virtual", themeController: _themeController),
+            '/locations': (context) => const Home(),
             '/recomendations': (context) => RecomendationsPage(themeController: _themeController),
-            // Rutas nuevas que pediste
             '/editProfile': (context) => const EditProfilePage(),
             '/privacySecurity': (context) => const PrivacySecurityPage(),
           },
@@ -119,7 +114,6 @@ class _SplashRouterState extends State<SplashRouter> {
     }
 
     return _loggedIn
-        // Pasamos themeController a MainScreen para que MainScreen y Settings puedan usarlo.
         ? MainScreen(themeController: widget.themeController)
         : const OnboardingScreen();
   }
@@ -142,9 +136,9 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _pages = [
-      const LocationsPage(),
+      const Home(),
       RecomendationsPage(themeController: widget.themeController),
-      const ChatBotPage(title: "Asistente Virtual"),
+      ChatBotPage(title: "Asistente Virtual", themeController: widget.themeController),
       SettingsPage(themeController: widget.themeController),
     ];
   }

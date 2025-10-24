@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/api_service.dart';
 import '../../models/place.dart';
 import '../../utils/theme_controller.dart';
@@ -6,10 +7,7 @@ import '../../utils/theme_controller.dart';
 class RecomendationsPage extends StatefulWidget {
   final ThemeController themeController;
 
-  const RecomendationsPage({
-    super.key,
-    required this.themeController,
-  });
+  const RecomendationsPage({super.key, required this.themeController});
 
   @override
   State<RecomendationsPage> createState() => _RecomendationsPageState();
@@ -51,12 +49,7 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
     "Más de 5 personas",
   ];
 
-  final times = const [
-    "Mañana",
-    "Tarde",
-    "Noche",
-    "Todo el día",
-  ];
+  final times = const ["Mañana", "Tarde", "Noche", "Todo el día"];
 
   final categoryMap = const {
     "restaurantes": "restaurants",
@@ -85,7 +78,7 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
         time: selectedTime,
       );
 
-      final places = data.map<Place>(Place.fromJson).toList();
+      final places = data.map<Place>((json) => Place.fromJson(json)).toList();
 
       setState(() => recommendations = places);
     } catch (e) {
@@ -94,6 +87,17 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
       );
     } finally {
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _openInGoogleMaps(double lat, double lng) async {
+    final Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No se pudo abrir Google Maps.")),
+      );
     }
   }
 
@@ -111,9 +115,9 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
         elevation: 0,
         backgroundColor: cardColor,
         title: Text(
-          "Smart Recommender",
+          "Recomendaciones Inteligentes",
           style: TextStyle(
-            color: textColor,
+            color: Color(0xFF0ba6da),
             fontWeight: FontWeight.w600,
             fontSize: 20,
           ),
@@ -128,14 +132,14 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
             _buildForm(isDark, cardColor, textColor, subtitleColor),
             const SizedBox(height: 30),
             if (isLoading)
-              const CircularProgressIndicator()
+              const CircularProgressIndicator(color: primaryColor)
             else if (recommendations.isNotEmpty)
               _buildRecommendationsList(isDark, cardColor, subtitleColor, textColor)
             else
               Text(
                 "Selecciona tus preferencias y obtén recomendaciones personalizadas.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: subtitleColor),
+                style: TextStyle(color: subtitleColor, fontSize: 15),
               ),
           ],
         ),
@@ -143,7 +147,12 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
     );
   }
 
-  Widget _buildForm(bool isDark, Color cardColor, Color textColor, Color subtitleColor) {
+  Widget _buildForm(
+    bool isDark,
+    Color cardColor,
+    Color textColor,
+    Color subtitleColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
@@ -176,7 +185,6 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
               style: TextStyle(color: subtitleColor, height: 1.5),
             ),
             const SizedBox(height: 25),
-
             _buildDropdown(
               label: "Tipo de lugar",
               icon: Icons.place_outlined,
@@ -186,7 +194,6 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
               isDark: isDark,
             ),
             const SizedBox(height: 18),
-
             _buildDropdown(
               label: "Presupuesto",
               icon: Icons.attach_money_rounded,
@@ -196,7 +203,6 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
               isDark: isDark,
             ),
             const SizedBox(height: 18),
-
             _buildDropdown(
               label: "Número de personas",
               icon: Icons.group_outlined,
@@ -206,7 +212,6 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
               isDark: isDark,
             ),
             const SizedBox(height: 18),
-
             _buildDropdown(
               label: "Horario preferido",
               icon: Icons.schedule_outlined,
@@ -216,7 +221,6 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
               isDark: isDark,
             ),
             const SizedBox(height: 30),
-
             ElevatedButton(
               onPressed: isLoading ? null : _submitForm,
               style: ElevatedButton.styleFrom(
@@ -226,6 +230,7 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
                   borderRadius: BorderRadius.circular(15),
                 ),
                 elevation: 0,
+                minimumSize: const Size(double.infinity, 20),
               ),
               child: const Text(
                 "Obtener Recomendación",
@@ -242,12 +247,18 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
     );
   }
 
-  Widget _buildRecommendationsList(
-      bool isDark, Color cardColor, Color subtitleColor, Color textColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: recommendations.map((place) {
-        return Container(
+Widget _buildRecommendationsList(
+  bool isDark,
+  Color cardColor,
+  Color subtitleColor,
+  Color textColor,
+) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: recommendations.map((place) {
+      return GestureDetector(
+        onTap: () => _openInGoogleMaps(place.latitude, place.longitude),
+        child: Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: cardColor,
@@ -260,57 +271,69 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
               ),
             ],
           ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(12),
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: place.imageUrl.isNotEmpty
-                  ? Image.network(place.imageUrl,
-                      width: 80, height: 80, fit: BoxFit.cover)
-                  : Container(
-                      width: 80,
-                      height: 80,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_not_supported_outlined),
-                    ),
-            ),
-            title: Text(
-              place.name,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: textColor,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                ),
+                child: Image.network(
+                  place.imageUrl,
+                  width: 110,
+                  height: 110,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 110,
+                    height: 110,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image_not_supported_outlined),
+                  ),
+                ),
               ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(
-                  place.description,
-                  style: TextStyle(color: subtitleColor, height: 1.4),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.place, color: primaryColor, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      place.category ?? "Sin categoría",
-                      style: const TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.w500,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        place.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.map_outlined,
+                              color: primaryColor, size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Toca para ver la ubicación",
+                            style: TextStyle(
+                              color: subtitleColor,
+                              fontSize: 13.5,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      );
+    }).toList(),
+  );
+}
+
 
   Widget _buildDropdown({
     required String label,
@@ -334,9 +357,7 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
       ),
       dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       value: value,
-      items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-          .toList(),
+      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
       onChanged: (v) => setState(() => onChanged(v)),
       validator: (v) => v == null ? "Campo requerido" : null,
     );

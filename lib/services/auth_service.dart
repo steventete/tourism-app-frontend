@@ -17,9 +17,6 @@ class AuthService {
         body: jsonEncode({"identifier": identifier, "password": password}),
       );
 
-      print("Código de respuesta: ${response.statusCode}");
-      print("Cuerpo: ${response.body}");
-
       Map<String, dynamic> data = {};
       try {
         data = jsonDecode(response.body);

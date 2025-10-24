@@ -59,7 +59,7 @@ class BottomNavBar extends StatelessWidget {
                   ? Icons.star_rounded
                   : Icons.star_outline_rounded,
             ),
-            label: 'Recomendados',
+            label: 'Recomendaciones',
           ),
           BottomNavigationBarItem(
             icon: Icon(

@@ -8,7 +8,6 @@ class StorageService {
   static const _expiryKey = 'access_token_expiry';
   static const _userIdentifierKey = 'user_identifier';
 
-  /// Guardar tokens y fecha de expiración
   static Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
