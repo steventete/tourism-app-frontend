@@ -4,6 +4,7 @@ import 'locations.dart';
 import 'recomendations.dart';
 import 'chatbot.dart';
 import 'settings.dart';
+import '../../utils/theme_controller.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,15 +14,23 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 2; 
+  int _currentIndex = 2;
   final PageController _pageController = PageController(initialPage: 2);
+  late final ThemeController _themeController;
+  late final List<Widget> _pages;
 
-  final List<Widget> _pages = const [
-    LocationsPage(),
-    RecomendationsPage(),
-    ChatBotPage(title: "Asistente Virtual"),
-    SettingsPage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _themeController = ThemeController();
+
+    _pages = [
+      const LocationsPage(),
+      RecomendationsPage(themeController: _themeController),
+      const ChatBotPage(title: "Asistente Virtual"),
+      SettingsPage(themeController: _themeController),
+    ];
+  }
 
   void _onPageChanged(int index) {
     setState(() => _currentIndex = index);
@@ -44,6 +53,7 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onNavTap,
+        themeController: _themeController,
       ),
     );
   }

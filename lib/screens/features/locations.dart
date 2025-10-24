@@ -27,7 +27,6 @@ class Location {
   });
 }
 
-
 final List<Location> locations = [
   Location(
     name: "Ciudad Amurallada",
@@ -46,7 +45,8 @@ final List<Location> locations = [
   ),
   Location(
     name: "Playa Blanca",
-    description: "Arena blanca y aguas cristalinas en la isla de Barú, ideal para relajarse.",
+    description:
+        "Arena blanca y aguas cristalinas en la isla de Barú, ideal para relajarse.",
     images: [
       "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/3f/9e/5f/img-20181031-wa0013-largejpg.jpg?w=1200&h=-1&s=1",
     ],
@@ -72,7 +72,6 @@ final List<Location> locations = [
     phone: "6056665555",
   ),
 ];
-
 
 class LocationsPage extends StatefulWidget {
   const LocationsPage({super.key});
@@ -105,7 +104,6 @@ class _LocationsPageState extends State<LocationsPage> {
       }
 
       final position = await Geolocator.getCurrentPosition();
-
       List<Placemark> placemarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
 
@@ -120,9 +118,16 @@ class _LocationsPageState extends State<LocationsPage> {
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFF0ba6da);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final bgColor = theme.scaffoldBackgroundColor;
+    final cardColor = theme.cardColor;
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final subtitleColor = isDark ? Colors.white70 : Colors.black54;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -130,11 +135,11 @@ class _LocationsPageState extends State<LocationsPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Explora cerca de ti 🌍",
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.black54,
+                color: subtitleColor,
                 fontFamily: 'Inter',
               ),
             ),
@@ -145,11 +150,11 @@ class _LocationsPageState extends State<LocationsPage> {
                 const SizedBox(width: 4),
                 Text(
                   _city ?? "Detectando ubicación...",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: textColor,
                   ),
                 ),
               ],
@@ -174,14 +179,15 @@ class _LocationsPageState extends State<LocationsPage> {
             child: Container(
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12.withOpacity(0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
+                  if (!isDark)
+                    BoxShadow(
+                      color: Colors.black12.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                 ],
               ),
               child: Column(
@@ -189,7 +195,8 @@ class _LocationsPageState extends State<LocationsPage> {
                   Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                        borderRadius:
+                            const BorderRadius.vertical(top: Radius.circular(18)),
                         child: Image.network(
                           loc.images.first,
                           height: 200,
@@ -203,18 +210,22 @@ class _LocationsPageState extends State<LocationsPage> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
+                            color: isDark
+                                ? Colors.black.withOpacity(0.7)
+                                : Colors.white.withOpacity(0.85),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                              const Icon(Icons.star_rounded,
+                                  color: Colors.amber, size: 18),
                               const SizedBox(width: 3),
                               Text(
                                 loc.rating.toString(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontFamily: 'Inter',
+                                  color: textColor,
                                 ),
                               ),
                             ],
@@ -250,10 +261,11 @@ class _LocationsPageState extends State<LocationsPage> {
                       children: [
                         Text(
                           loc.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             fontFamily: 'Inter',
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -261,8 +273,8 @@ class _LocationsPageState extends State<LocationsPage> {
                           loc.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.black54,
+                          style: TextStyle(
+                            color: subtitleColor,
                             fontFamily: 'Inter',
                             height: 1.4,
                           ),

@@ -4,60 +4,61 @@ import 'package:tourism_app/utils/api_routes.dart';
 import 'package:tourism_app/utils/storage_service.dart';
 
 class AuthService {
-  
-static Future<Map<String, dynamic>> login(
-    String identifier, String password) async {
-  final url = Uri.parse(ApiRoutes.login);
+  static Future<Map<String, dynamic>> login(
+    String identifier,
+    String password,
+  ) async {
+    final url = Uri.parse(ApiRoutes.login);
 
-  try {
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "identifier": identifier,
-        "password": password,
-      }),
-    );
-
-    print("Código de respuesta: ${response.statusCode}");
-    print("Cuerpo: ${response.body}");
-
-    Map<String, dynamic> data = {};
     try {
-      data = jsonDecode(response.body);
-    } catch (_) {
-      // Si no es JSON válido, lo manejamos como texto plano
-      data = {"message": response.body};
-    }
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({"identifier": identifier, "password": password}),
+      );
 
-    if (response.statusCode == 200) {
-      final accessToken = data["accessToken"];
-      final refreshToken = data["refreshToken"];
+      print("Código de respuesta: ${response.statusCode}");
+      print("Cuerpo: ${response.body}");
 
-      if (accessToken != null && refreshToken != null) {
-        await StorageService.saveTokens(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          expiresIn: 7200,
-        );
+      Map<String, dynamic> data = {};
+      try {
+        data = jsonDecode(response.body);
+      } catch (_) {
+        data = {"message": response.body};
       }
 
-      return {
-        "success": true,
-        "message": data["message"] ?? "Inicio de sesión exitoso",
-      };
-    } else {
-      return {
-        "success": false,
-        "message": data["message"] ?? "Error al iniciar sesión",
-      };
-    }
-  } catch (e) {
-    print("Error en AuthService.login: $e");
-    return {"success": false, "message": "Error de conexión con el servidor"};
-  }
-}
+      if (response.statusCode == 200) {
+        final accessToken = data["accessToken"];
+        final refreshToken = data["refreshToken"];
 
+        if (accessToken != null && refreshToken != null) {
+          await StorageService.saveTokens(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            expiresIn: 7200,
+          );
+
+          final identifier = data["user"]?["identifier"] ?? data["identifier"];
+          if (identifier != null) {
+            await StorageService.saveUserIdentifier(identifier);
+          }
+        }
+
+        return {
+          "success": true,
+          "message": data["message"] ?? "Inicio de sesión exitoso",
+        };
+      } else {
+        return {
+          "success": false,
+          "message": data["message"] ?? "Error al iniciar sesión",
+        };
+      }
+    } catch (e) {
+      print("Error en AuthService.login: $e");
+      return {"success": false, "message": "Error de conexión con el servidor"};
+    }
+  }
 
   static Future<String?> refreshToken() async {
     try {
@@ -79,13 +80,13 @@ static Future<Map<String, dynamic>> login(
           await StorageService.saveTokens(
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
-            expiresIn: 7200, // 2 horas nuevamente
+            expiresIn: 7200,
           );
           return newAccessToken;
         }
       }
     } catch (e) {
-      // Evita romper si el refresh falla
+      print("Error en refreshToken: $e");
     }
 
     return null;
@@ -93,5 +94,9 @@ static Future<Map<String, dynamic>> login(
 
   static Future<void> logout() async {
     await StorageService.clearTokens();
+  }
+
+  static Future<String?> getAccessToken() async {
+    return await StorageService.getAccessToken();
   }
 }

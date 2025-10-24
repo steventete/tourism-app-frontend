@@ -42,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final url = Uri.parse("https://app-turismo.onrender.com/api/auth/register");
+    final url = Uri.parse("https://face-needs-highlighted-zoo.trycloudflare.com/api/auth/register");
     final body = {
       "email": _emailController.text.trim(),
       "password": _passwordController.text.trim(),

@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:tourism_app/utils/theme_controller.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final ThemeController themeController;
 
   const BottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.themeController,
   });
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF0ba6da);
+    final bool isDarkMode = themeController.isDarkMode;
+
+    final Color backgroundColor = isDarkMode ? const Color(0xFF121212) : Colors.white;
+    final Color selectedColor = const Color(0xFF0ba6da);
+    final Color unselectedColor = isDarkMode ? Colors.white70 : Colors.black54;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        boxShadow: const [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 6,
@@ -29,9 +36,9 @@ class BottomNavBar extends StatelessWidget {
         currentIndex: currentIndex,
         onTap: onTap,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: Colors.black54,
+        backgroundColor: backgroundColor,
+        selectedItemColor: selectedColor,
+        unselectedItemColor: unselectedColor,
         showSelectedLabels: true,
         showUnselectedLabels: true,
         selectedFontSize: 12,

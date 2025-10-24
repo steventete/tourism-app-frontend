@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tourism_app/main.dart';
 import 'package:tourism_app/services/auth_service.dart';
+import 'package:tourism_app/utils/storage_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -32,23 +32,28 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await AuthService.login(
-        _identifierController.text.trim(),
-        _passwordController.text.trim(),
-      ).timeout(const Duration(seconds: 10), onTimeout: () {
-        throw Exception("timeout");
-      });
+      final response =
+          await AuthService.login(
+            _identifierController.text.trim(),
+            _passwordController.text.trim(),
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception("timeout");
+            },
+          );
 
       if (!mounted) return;
 
+      final token = await StorageService.getAccessToken();
+      debugPrint("Token guardado en SharedPreferences: $token");
+
       if (response["success"] == true) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-          (route) => false,
-        );
+        await StorageService.saveUserIdentifier("me");
+        Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
       } else {
-        final message = response["message"] ??
+        final message =
+            response["message"] ??
             "Credenciales incorrectas. Intenta nuevamente.";
         _showError(message);
       }
@@ -76,7 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loginWithGoogle() async {
-    // 🔹 Próximamente: integración con Google OAuth
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Inicio con Google en desarrollo"),
