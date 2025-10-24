@@ -11,4 +11,7 @@ class ApiRoutes {
   static const String getAllPlaces = '$baseUrl/places';
   static const String searchPlaces = '$baseUrl/places/search';
   static const String askAI = '$baseUrl/places/ask';
+  // User routes
+  static const String getUserProfile = '$baseUrl/users/me';
+  static const String updateUserProfilePhoto = '$baseUrl/users/picture/';
 }

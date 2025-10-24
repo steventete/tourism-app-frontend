@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tourism_app/services/api_service.dart';
 import 'package:tourism_app/services/auth_service.dart';
 import 'package:tourism_app/utils/storage_service.dart';
@@ -81,15 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _loginWithGoogle() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Inicio con Google en desarrollo"),
-        backgroundColor: Colors.blueAccent,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,30 +228,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton.icon(
-                      icon: const Icon(FontAwesomeIcons.google),
-                      label: const Text(
-                        "Continuar con Google",
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 15,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.grey, width: 1.2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        backgroundColor: Colors.white,
-                      ),
-                      onPressed: _loginWithGoogle,
-                    ),
-                  ),
 
                   const SizedBox(height: 24),
 

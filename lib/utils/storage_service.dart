@@ -1,51 +1,103 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tourism_app/models/user_profile.dart';
 
 class StorageService {
   static const _storage = FlutterSecureStorage();
 
-  static const _accessTokenKey = 'access_token';
-  static const _refreshTokenKey = 'refresh_token';
-  static const _expiryKey = 'access_token_expiry';
-  static const _userIdentifierKey = 'user_identifier';
+  // Claves de almacenamiento
+  static const String _keyAccessToken = 'access_token';
+  static const String _keyRefreshToken = 'refresh_token';
+  static const String _keyTokenExpiration = 'token_expiration';
+  static const String _keyUserIdentifier = 'user_identifier';
+  static const String _keyUserProfile = 'user_profile';
 
   static Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
     required int expiresIn,
   }) async {
-    final expiryDate = DateTime.now().add(Duration(seconds: expiresIn));
-    await _storage.write(key: _accessTokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken);
-    await _storage.write(key: _expiryKey, value: expiryDate.toIso8601String());
+    final expirationTime = DateTime.now()
+        .add(Duration(seconds: expiresIn))
+        .toIso8601String();
+
+    await Future.wait([
+      _storage.write(key: _keyAccessToken, value: accessToken),
+      _storage.write(key: _keyRefreshToken, value: refreshToken),
+      _storage.write(key: _keyTokenExpiration, value: expirationTime),
+    ]);
   }
 
   static Future<String?> getAccessToken() async {
-    return await _storage.read(key: _accessTokenKey);
-  }
-
-  static Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
+    return await _storage.read(key: _keyAccessToken);
   }
 
   static Future<bool> isAccessTokenExpired() async {
-    final expiry = await _storage.read(key: _expiryKey);
-    if (expiry == null) return true;
-    final expiryDate = DateTime.tryParse(expiry);
-    if (expiryDate == null) return true;
-    return DateTime.now().isAfter(expiryDate);
+    final expiration = await _storage.read(key: _keyTokenExpiration);
+    if (expiration == null) return true;
+
+    try {
+      final expirationDate = DateTime.parse(expiration);
+      return DateTime.now().isAfter(expirationDate);
+    } catch (e) {
+      return true;
+    }
+  }
+
+  static Future<String?> getRefreshToken() async {
+    return await _storage.read(key: _keyRefreshToken);
   }
 
   static Future<void> clearTokens() async {
-    await _storage.delete(key: _accessTokenKey);
-    await _storage.delete(key: _refreshTokenKey);
-    await _storage.delete(key: _expiryKey);
+    await Future.wait([
+      _storage.delete(key: _keyAccessToken),
+      _storage.delete(key: _keyRefreshToken),
+      _storage.delete(key: _keyTokenExpiration),
+      _storage.delete(key: _keyUserIdentifier),
+      _storage.delete(key: _keyUserProfile),
+    ]);
   }
 
   static Future<void> saveUserIdentifier(String identifier) async {
-    await _storage.write(key: _userIdentifierKey, value: identifier);
+    await _storage.write(key: _keyUserIdentifier, value: identifier);
   }
 
   static Future<String?> getUserIdentifier() async {
-    return await _storage.read(key: _userIdentifierKey);
+    return await _storage.read(key: _keyUserIdentifier);
+  }
+
+  static Future<void> saveUserProfile(UserProfile profile) async {
+    try {
+      final jsonString = jsonEncode(profile.toJson());
+      await _storage.write(key: _keyUserProfile, value: jsonString);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static Future<UserProfile?> getUserProfile() async {
+    try {
+      final jsonString = await _storage.read(key: _keyUserProfile);
+      if (jsonString == null) return null;
+
+      final json = jsonDecode(jsonString);
+      return UserProfile.fromJson(json);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<void> clearUserProfile() async {
+    await _storage.delete(key: _keyUserProfile);
+  }
+
+  static Future<bool> isLoggedIn() async {
+    final token = await getAccessToken();
+    final profile = await getUserProfile();
+    return token != null && profile != null;
+  }
+
+  static Future<void> clearAll() async {
+    await _storage.deleteAll();
   }
 }

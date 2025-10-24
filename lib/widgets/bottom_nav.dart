@@ -71,7 +71,7 @@ class BottomNavBar extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              currentIndex == 3
+              currentIndex == 1
                   ? Icons.settings_rounded
                   : Icons.settings_outlined,
             ),

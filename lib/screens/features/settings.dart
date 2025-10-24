@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../utils/storage_service.dart';
-import '../../services/user_service.dart';
-import 'dart:io';
+import 'package:tourism_app/models/user_profile.dart';
+import 'package:tourism_app/services/auth_service.dart';
+import 'package:tourism_app/utils/storage_service.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../utils/theme_controller.dart';
+import 'package:tourism_app/utils/theme_controller.dart';
 
 class SettingsPage extends StatefulWidget {
   final ThemeController themeController;
@@ -20,7 +20,7 @@ class _SettingsPageState extends State<SettingsPage>
   bool notificationsEnabled = true;
   bool darkModeEnabled = false;
 
-  Map<String, dynamic>? _userData;
+  UserProfile? _userProfile;
   bool _isLoading = true;
   bool _hasLoadedOnce = false;
 
@@ -32,43 +32,53 @@ class _SettingsPageState extends State<SettingsPage>
     _hasLoadedOnce = true;
 
     try {
-      final identifier = await StorageService.getUserIdentifier();
-      if (identifier == null) {
-        _setDefaultUser();
-        return;
+      final profile = await AuthService.getUserProfile();
+      
+      if (profile == null) {
+        // Si no hay perfil guardado, intentar obtenerlo del servidor
+        final fetchedProfile = await AuthService.fetchAndSaveUserProfile();
+        if (mounted) {
+          setState(() {
+            _userProfile = fetchedProfile;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _userProfile = profile;
+            _isLoading = false;
+          });
+        }
       }
-
-      final data = await UserService.getProfile(identifier);
+    } catch (e) {
+      print('Error al cargar perfil: $e');
       if (mounted) {
         setState(() {
-          _userData = {
-            'displayname': data?['username'] ?? 'Usuario',
-            'email': data?['email'] ?? 'sin correo electrónico',
-            'avatarUrl':
-                data?['picture'] ??
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/250px-Default_pfp.svg.png',
-            'firstname': data?['client']?['firstName'] ?? '',
-            'lastname': data?['client']?['lastName'] ?? '',
-          };
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshUserProfile() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      final profile = await AuthService.refreshUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
           _isLoading = false;
         });
       }
     } catch (e) {
-      _setDefaultUser();
-    }
-  }
-
-  void _setDefaultUser() {
-    if (mounted) {
-      setState(() {
-        _userData = {
-          'displayname': 'Usuario',
-          'email': 'usuario@ejemplo.com',
-          'avatarUrl':
-              'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/250px-Default_pfp.svg.png',
-        };
-        _isLoading = false;
-      });
+      print('Error al refrescar perfil: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -101,31 +111,36 @@ class _SettingsPageState extends State<SettingsPage>
 
   Future<void> _changeProfilePicture() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    
     if (pickedFile == null) return;
 
-    final file = File(pickedFile.path);
-    final identifier = await StorageService.getUserIdentifier();
-    if (identifier == null) return;
+    // Mostrar loading
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Subiendo imagen...")),
+      );
+    }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Subiendo imagen...")));
+    final success = await AuthService.updateProfilePicture(pickedFile.path);
 
-    final success = await UserService.updateProfilePicture(
-      identifier,
-      file.path,
-    );
-
-    if (success) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Imagen actualizada")));
-      _loadUserProfile();
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Error al actualizar")));
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Imagen actualizada exitosamente")),
+        );
+        // Refrescar el perfil para mostrar la nueva imagen
+        await _refreshUserProfile();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error al actualizar la imagen")),
+        );
+      }
     }
   }
 
@@ -148,154 +163,194 @@ class _SettingsPageState extends State<SettingsPage>
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 30,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 10),
-                    Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        CircleAvatar(
-                          radius: 55,
-                          backgroundImage: NetworkImage(
-                            _userData?['avatarUrl'] ?? '',
+            : RefreshIndicator(
+                onRefresh: _refreshUserProfile,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 30,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 10),
+                      Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          CircleAvatar(
+                            radius: 55,
+                            backgroundImage: _userProfile?.picture != null
+                                ? NetworkImage(_userProfile!.picture!)
+                                : null,
+                            backgroundColor: colorScheme.surfaceContainerHighest,
+                            child: _userProfile?.picture == null
+                                ? Text(
+                                    _userProfile?.client.firstName
+                                            .substring(0, 1)
+                                            .toUpperCase() ??
+                                        'U',
+                                    style: TextStyle(
+                                      fontSize: 32,
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )
+                                : null,
                           ),
-                          backgroundColor: colorScheme.surfaceContainerHighest,
-                        ),
-                        Container(
-                          height: 36,
-                          width: 36,
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 18,
+                          Container(
+                            height: 36,
+                            width: 36,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
                             ),
-                            onPressed: _changeProfilePicture,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              onPressed: _changeProfilePicture,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _userData?['displayname'] ?? 'Usuario',
-                      style: TextStyle(
-                        fontSize: 22,
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    if ((_userData?['firstname'] ?? '').isNotEmpty)
+                      const SizedBox(height: 16),
                       Text(
-                        "${_userData?['firstname']} ${_userData?['lastname']}",
+                        _userProfile?.displayName ?? 'Usuario',
+                        style: TextStyle(
+                          fontSize: 22,
+                          color: colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _userProfile?.fullName ?? '',
                         style: TextStyle(
                           fontSize: 16,
                           color: colorScheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _userData?['email'] ?? '',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 4),
+                      Text(
+                        _userProfile?.email ?? '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 35),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerLowest,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                      if (_userProfile?.isVerified == true) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _switchTile(
-                            FontAwesomeIcons.bell,
-                            "Notificaciones",
-                            notificationsEnabled,
-                            (val) {
-                              setState(() => notificationsEnabled = val);
-                            },
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green),
                           ),
-                          _divider(colorScheme),
-                          _switchTile(
-                            FontAwesomeIcons.moon,
-                            "Modo oscuro",
-                            isDarkMode,
-                            (val) {
-                              widget.themeController.toggleTheme();
-                              setState(() => darkModeEnabled = val);
-                            },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(
+                                Icons.verified,
+                                color: Colors.green,
+                                size: 16,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Verificado',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          _divider(colorScheme),
-                          _optionTile(
-                            FontAwesomeIcons.userPen,
-                            "Editar perfil",
-                            colorScheme,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/editProfile',
-                                arguments: _userData,
-                              ).then((_) => _loadUserProfile());
-                            },
-                          ),
-                          _divider(colorScheme),
-                          _optionTile(
-                            FontAwesomeIcons.shieldHalved,
-                            "Privacidad y seguridad",
-                            colorScheme,
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              '/privacySecurity',
+                        ),
+                      ],
+                      const SizedBox(height: 35),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                          ),
-                          _divider(colorScheme),
-                          _optionTile(
-                            FontAwesomeIcons.arrowRightFromBracket,
-                            "Cerrar sesión",
-                            colorScheme,
-                            color: Colors.redAccent,
-                            onTap: _logout,
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _switchTile(
+                              FontAwesomeIcons.bell,
+                              "Notificaciones",
+                              notificationsEnabled,
+                              (val) {
+                                setState(() => notificationsEnabled = val);
+                              },
+                            ),
+                            _divider(colorScheme),
+                            _switchTile(
+                              FontAwesomeIcons.moon,
+                              "Modo oscuro",
+                              isDarkMode,
+                              (val) {
+                                widget.themeController.toggleTheme();
+                                setState(() => darkModeEnabled = val);
+                              },
+                            ),
+                            _divider(colorScheme),
+                            _optionTile(
+                              FontAwesomeIcons.shieldHalved,
+                              "Privacidad y seguridad",
+                              colorScheme,
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                '/privacySecurity',
+                              ),
+                            ),
+                            _divider(colorScheme),
+                            _optionTile(
+                              FontAwesomeIcons.arrowRightFromBracket,
+                              "Cerrar sesión",
+                              colorScheme,
+                              color: Colors.redAccent,
+                              onTap: _logout,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    Text(
-                      "Kuagro Explorer",
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 13,
+                      const SizedBox(height: 30),
+                      // Información adicional del usuario (si es admin)
+                      if (_userProfile?.isAdmin == true)
+
+                      const SizedBox(height: 20),
+                      Text(
+                        "Kuagro Explorer",
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "v1.0.0",
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 12,
+                      const SizedBox(height: 10),
+                      Text(
+                        "v1.0.0",
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
       ),
