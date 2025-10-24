@@ -18,7 +18,7 @@ import {
   providedIn: 'root'
 })
 export class TokenService {
-  private readonly apiUrl = 'https://app-turismo.onrender.com/api';
+  private readonly apiUrl = 'https://bald-marie-thumbs-blessed.trycloudflare.com/api';
   private readonly messages = {
     success: '¡Tu cuenta ha sido verificada exitosamente! Ya puedes acceder a todas las funcionalidades de TurisApp Colombia.',
     tokenNotFound: 'Token no encontrado en la URL',

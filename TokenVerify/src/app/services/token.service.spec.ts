@@ -14,7 +14,7 @@ import {
 describe('TokenService - Integration Tests', () => {
   let service: TokenService;
   let httpMock: HttpTestingController;
-  const apiUrl = 'https://app-turismo.onrender.com/api';
+  const apiUrl = 'https://bald-marie-thumbs-blessed.trycloudflare.com/api';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
